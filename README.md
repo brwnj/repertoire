@@ -14,8 +14,8 @@ Profiling model T-cell metagenomes with short reads
 
 3. Download TCRB predictions from IMGT
 
-4. Align reads using exonerate to find seeds
+4. Create tags from IMGT
 
-    ``exonerate --bestn 1 --score 1 --percent 0 -q trimmed.fa -t TCRB.fa``
+    ``python create_tags.py -v -l 40 trav.fa > trav.tags.fa``
 
-#TODO
+5. Run iSSAKE
