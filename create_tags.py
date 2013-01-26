@@ -75,10 +75,11 @@ def main(args):
 if __name__ == "__main__":
     import argparse
     p = argparse.ArgumentParser(description=__doc__,
+            usage="%(prog)s [options] fasta",
             formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("fasta", metavar="FASTA", help="regions fasta")
     p.add_argument("-l", "--length", default=20, type=int,
-            help="desired tag length [ %(default)i ]")
+            help="desired tag length [ %(default)s ]")
     p.add_argument("-v", "--verbose", action="store_true",
             help="maximum verbosity")
     main(p.parse_args())
