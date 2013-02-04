@@ -78,7 +78,7 @@ if __name__ == "__main__":
             usage="%(prog)s [options] fasta",
             formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("fasta", metavar="FASTA", help="regions fasta")
-    p.add_argument("-l", "--length", default=20, type=int,
+    p.add_argument("-l", "--length", default=35, type=int,
             help="desired tag length [ %(default)s ]")
     p.add_argument("-v", "--verbose", action="store_true",
             help="maximum verbosity")
