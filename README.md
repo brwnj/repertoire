@@ -29,3 +29,7 @@ Profiling model T-cell metagenomes with short reads
 Bioawk: https://github.com/lh3/bioawk
 
 Python dependency: ``pip install toolshed``
+
+TRBV group: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=8.1+TRBV&species=Homo+sapiens&IMGTlabel=L-PART1+V-EXON
+
+TRAV group: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=8.1+TRAV&species=Homo+sapiens&IMGTlabel=L-PART1+V-EXON
