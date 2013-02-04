@@ -23,3 +23,9 @@ Profiling model T-cell metagenomes with short reads
     ``python find_seeds.py -v trav.tags.fa in.fq > seeds.fa``
 
 1. Run iSSAKE
+
+#Links
+
+Bioawk: https://github.com/lh3/bioawk
+
+Python dependency: ``pip install toolshed``
