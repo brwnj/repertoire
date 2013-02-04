@@ -4,6 +4,7 @@
 given sequence tags, finds reads containing that sequence and creates a fasta.
 """
 import sys
+import os.path as op
 from toolshed import nopen
 
 class read_fastq(object):
@@ -42,17 +43,18 @@ def main(args):
         sys.stderr.write(">> reading in tag sequences...\n")
     for name, seq in read_fasta(args.tags):
         tags[name] = seq
-    if args.verbose:
-        sys.stderr.write(">> processing reads...\n")
-    c = 0
-    for fq_id, fq_seq, fq_qual in read_fastq(args.fastq):
-        c += 1
-        if c%1000000 == 0 and args.verbose:
-            sys.stderr.write(">> processed %d reads...\n" % c)
-        for tcr_name, tcr_seq in tags.iteritems():
-            if fq_seq.find(tcr_seq) != -1:
-                print ">%s|%s\n%s" % (fq_id, tcr_name, fq_seq)
-                break
+    i = 0
+    for fq in args.fastq:
+        if args.verbose:
+            sys.stderr.write(">> processing %s...\n" % op.basename(fq))
+        for fq_id, fq_seq, fq_qual in read_fastq(fq):
+            i += 1
+            if i%1000000 == 0 and args.verbose:
+                sys.stderr.write(">> processed %d reads...\n" % i)
+            for tcr_name, tcr_seq in tags.iteritems():
+                if fq_seq.find(tcr_seq) != -1:
+                    print ">%s|%s\n%s" % (fq_id, tcr_name, fq_seq)
+                    break
 
 if __name__ == "__main__":
     import argparse
@@ -60,7 +62,7 @@ if __name__ == "__main__":
             usage="%(prog)s [options] tags fastq",
             formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("tags", help="unique tag sequences as fasta")
-    p.add_argument("fastq", help="read pool to create unique seeds")
+    p.add_argument("fastq", nargs="+", help="read pool to create unique seeds")
     p.add_argument("-v", "--verbose", action="store_true",
             help="maximum verbosity")
     main(p.parse_args())
