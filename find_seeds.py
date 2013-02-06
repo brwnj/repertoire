@@ -44,17 +44,28 @@ def main(args):
     for name, seq in read_fasta(args.tags):
         tags[name] = seq
     i = 0
-    for fq in args.fastq:
+    for fx in args.reads:
         if args.verbose:
-            sys.stderr.write(">> processing %s...\n" % op.basename(fq))
-        for fq_id, fq_seq, fq_qual in read_fastq(fq):
-            i += 1
-            if i%1000000 == 0 and args.verbose:
-                sys.stderr.write(">> processed %d reads...\n" % i)
-            for tcr_name, tcr_seq in tags.iteritems():
-                if fq_seq.find(tcr_seq) != -1:
-                    print ">%s|%s\n%s" % (fq_id, tcr_name, fq_seq)
-                    break
+            sys.stderr.write(">> processing %s...\n" % op.basename(fx))
+        # process either fasta or fastq. ugly.
+        if ".fasta" in fx or ".fa" in fx:
+            for fa_id, fa_seq in read_fasta(fx):
+                i += 1
+                if i%1000000 == 0 and args.verbose:
+                    sys.stderr.write(">> processed %d reads...\n" % i)
+                for tcr_name, tcr_seq in tags.iteritems():
+                    if fa_seq.find(tcr_seq) != -1:
+                        print ">%s|%s\n%s" % (fa_id, tcr_name, fa_seq)
+                        break
+        else:
+            for fq_id, fq_seq, fq_qual in read_fastq(fx):
+                i += 1
+                if i%1000000 == 0 and args.verbose:
+                    sys.stderr.write(">> processed %d reads...\n" % i)
+                for tcr_name, tcr_seq in tags.iteritems():
+                    if fq_seq.find(tcr_seq) != -1:
+                        print ">%s|%s\n%s" % (fq_id, tcr_name, fq_seq)
+                        break
 
 if __name__ == "__main__":
     import argparse
@@ -62,7 +73,7 @@ if __name__ == "__main__":
             usage="%(prog)s [options] tags fastq",
             formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("tags", help="unique tag sequences as fasta")
-    p.add_argument("fastq", nargs="+", help="read pool to create unique seeds")
+    p.add_argument("reads", nargs="+", help="read pool to create unique seeds")
     p.add_argument("-v", "--verbose", action="store_true",
             help="maximum verbosity")
     main(p.parse_args())
