@@ -122,8 +122,8 @@ my $rdpositionfile = $base_name . ".readposition" if ($tracked);
 
 open (LOG, ">$log") || die "Can't write to $log -- fatal\n";
 
-if($min_overlap < 15 || $min_overlap > 50){
-   my $outofbound_message = "-m must be a number between 15-50 ...Exiting.\n";
+if($min_overlap < 15 || $min_overlap > 75){
+   my $outofbound_message = "-m must be a number between 15-75 ...Exiting.\n";
    print $outofbound_message;
    print LOG $outofbound_message;
    close LOG;
@@ -1108,7 +1108,8 @@ sub loadSequence{
 
       $ctrd++;
       ####show progress
-      print "\r$ctrd";
+      # or not...
+      #print "\r$ctrd";
       $|++;
 
    }elsif($orig ne ''){
