@@ -979,7 +979,13 @@ sub readClone{
    my $clone_number = 0;
    my $clone;
 
-   open(IN,$file) || die "Can't open $file -- fatal\n";
+   if($file =~ /\.gz$/){
+       open(IN, "gunzip -c $file |") || die "can't open pipe to $file";
+   }
+   else{
+       open(IN,$file) || die "Can't open $file -- fatal\n";
+   }
+
    while(<IN>){
       chomp;
 
@@ -1003,7 +1009,13 @@ sub readFasta{
 
    my $ctrd = 0;
 
-   open(IN,$file) || die "Can't open $file -- fatal\n";
+   if($file =~ /\.gz$/){
+       open(IN, "gunzip -c $file |") || die "can't open pipe to $file";
+   }
+   else{
+       open(IN,$file) || die "Can't open $file -- fatal\n";
+   }
+
    open (SHO, ">>$short") || die "Can't write to $short -- fatal\n";
 
    print "Sequence reads inputted:\n";
@@ -1048,7 +1060,12 @@ sub loadSeed{
    my $file = shift;
    my $seed;  
 
-   open(IN,$file) || die "Can't open $file -- fatal\n";
+   if($file =~ /\.gz$/){
+       open(IN, "gunzip -c $file |") || die "can't open pipe to $file";
+   }
+   else{
+       open(IN,$file) || die "Can't open $file -- fatal\n";
+   }
    
    my ($subseq,$prev)=('','');
 
@@ -1119,7 +1136,8 @@ sub loadSequence{
          print SHO "$seq\tInput sequence shorter than minimum overlap specified($orig_mer < -m $min_overlap)\n";
       }
    }
-  
+   # print number of reads:
+   print "$ctrd\n";
    $MAX = $MAX_TOP if ($MAX > $MAX_TOP);
    return $set,$bin,$ctrd;
 }
