@@ -36,7 +36,8 @@ Profiling model T-cell metagenomes with short reads
 
     `python renameIMGT.py --gene TRAJ imgt_traj.fa > traj.fa`
 
-1. Locally align J regions to assembled contigs:
+1. Locally align J regions to assembled contigs
+
 
 
     exonerate -q sampleid.contigs \
