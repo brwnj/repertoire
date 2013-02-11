@@ -6,37 +6,49 @@ Profiling model T-cell metagenomes with short reads
 
 .gz is supported throughout the pipeline
 
-1. Quality trim your fastq
+Quality trim your fastq
 
-    `seqtk trimfq in.fq > trimmed.fq`
+```
+seqtk trimfq in.fq > trimmed.fq
+```
 
-1. Convert fastq to fasta
+Convert fastq to fasta
 
-    `bioawk -c fastx '{print ">"$name"\n"$seq}' trimmed.fq > trimmed.fa`
+```
+bioawk -c fastx '{print ">"$name"\n"$seq}' trimmed.fq > trimmed.fa
+```
 
-1. Download TCRB predictions from IMGT ([TRAV][1] or [TRBV][2])
+Download TCRB predictions from IMGT ([TRAV][1] or [TRBV][2])
 
-1. Create tags from IMGT regions
+Create tags from IMGT regions
 
-    `python create_tags.py -v -l 35 trav.fa > trav.tags.fa`
+```
+python create_tags.py -v -l 35 trav.fa > trav.tags.fa
+```
 
-1. Find seeds among your reads
+Find seeds among your reads
 
-    `python find_seeds.py -v trav.tags.fa in.fq > seeds.fa`
+```
+python find_seeds.py -v trav.tags.fa in.fq > seeds.fa
+```
 
-1. Run iSSAKE
+Run iSSAKE
 
-    `iSSAKE -f trimmed.fa -s seeds.fa -b sampleid`
+```
+iSSAKE -f trimmed.fa -s seeds.fa -b sampleid
+```
 
 ##Further analysis
 
-1. Download J regions based on strand ([TRAJ][3] or [TRBJ][4]).
+Download J regions based on strand ([TRAJ][3] or [TRBJ][4]).
 
-1. Rename fasta names
+Rename fasta names
 
-    `python renameIMGT.py --gene TRAJ imgt_traj.fa > traj.fa`
+```
+python renameIMGT.py --gene TRAJ imgt_traj.fa > traj.fa
+```
 
-1. Locally align J regions to assembled contigs
+Locally align J regions to assembled contigs
 
 ```
 exonerate -q sampleid.contigs \
@@ -48,10 +60,13 @@ exonerate -q sampleid.contigs \
     > sampleid.jregion.fa
 ```
 
-
 That will add the J region name onto the read the name
 
+Parse read names into data table
 
+Align sequences into tree using [Muscle][5] 
+
+Visualize data in [Topiary Explorer][6]
 
 ##Links
 
@@ -63,3 +78,5 @@ Python dependency: ``pip install toolshed``
 [2]: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=8.1+TRBV&species=Homo+sapiens&IMGTlabel=L-PART1+V-EXON
 [3]: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=7.2+TRAJ&species=Homo+sapiens
 [4]: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=7.2+TRBJ&species=Homo+sapiens
+[5]: http://www.ebi.ac.uk/Tools/msa/muscle/
+[6]: https://github.com/qiime/Topiary-Explorer
