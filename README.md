@@ -57,12 +57,22 @@ exonerate -q sampleid.contigs \
     --ryo ">%qi|%ti\n%qs" \
     --showalignment FALSE \
     --showvulgar FALSE \
-    > sampleid.jregion.fa
+    > sampleid.exonerate_out.fa
 ```
 
-That will add the J region name onto the read the name
+This step not only filters out possible bad contigs that have identifiable J
+region, but also adds the J region name onto the read name. You'll have to
+filter out some unwanted lines added by `exonerate`.
+
+```
+grep -v "Command line:\|Hostname:\|-- completed" sampleid.exonerate_out.fa > sampleid.fa
+```
 
 Parse read names into data table
+
+```
+python reads2meta.py sampleid.fa > sampleid.metadata
+```
 
 Align sequences into tree using [Muscle][5] 
 
