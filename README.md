@@ -38,7 +38,8 @@ Profiling model T-cell metagenomes with short reads
 
 1. Locally align J regions to assembled contigs
 
-```exonerate -q sampleid.contigs \
+```
+exonerate -q sampleid.contigs \
     -t traj.fa \
     --bestn 1 \
     --ryo ">%qi|%ti\n%qs" \
