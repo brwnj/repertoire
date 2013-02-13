@@ -74,7 +74,11 @@ Parse read names into data table
 python reads2meta.py sampleid.fa > sampleid.metadata
 ```
 
-Align sequences into tree using [Muscle][5] 
+Align sequences into tree using [Muscle][5]
+
+```
+muscle -in sampleid.fa -out aligned.fa
+```
 
 Visualize data in [Topiary Explorer][6]
 
