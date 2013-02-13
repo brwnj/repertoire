@@ -4,19 +4,9 @@
 From read names, create metadata table.
 """
 import sys
+import itertools
 from toolshed import nopen
-
-def read_fasta(fa):
-    """yields name and seq from fasta."""
-    name, seq = None, []
-    for line in fa:
-        line = line.rstrip()
-        if line.startswith('>'):
-            if name: yield (name, ''.join(seq))
-            name, seq = line.lstrip('>'), []
-        else:
-            seq.append(line)
-    if name: yield (name, ''.join(seq))
+from parsers import read_fasta
 
 def main(args):
     # fields from issake
@@ -24,8 +14,8 @@ def main(args):
     # the only fields i believe make any sense to keep
     out = "contig_id v_region j_region length coverage".split()
     print "\t".join(out)
-    for name, seq in read_fasta(nopen(args.fasta)):
-        # remove some text output from iSSAKE
+    for name, seq in read_fasta(args.fasta):
+        # remove some text from iSSAKE output
         name = name.replace("size","").replace("cov","").replace("read","").replace("seed:","")
         d = dict(zip(fields, name.split("|")))
         print "\t".join([d[o] for o in out])

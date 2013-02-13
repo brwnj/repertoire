@@ -1,41 +1,18 @@
 #! /usr/bin/env python
 # encoding: utf-8
 """
-given sequence tags, finds reads containing that sequence and creates a fasta.
+Given sequence tags, finds reads containing that sequence and creates a fasta.
 """
 import sys
+import itertools
 import os.path as op
 from toolshed import nopen
+from parsers import read_fastq, read_fasta
 
-class read_fastq(object):
-    """Yields name, seq, qual."""
-    def __init__(self, fastq):
-        self.fastq = nopen(fastq)
-
-    def __iter__(self):
-        fq = self.fastq
-        while True:
-            id1 = fq.next().strip()
-            seq = fq.next().strip()
-            id2 = fq.next().strip()
-            qual = fq.next().strip()
-            if qual == "":
-                if id1 != "":
-                    sys.stderr.write(">> Incomplete fastq record... skipping.\n")
-                break
-            yield id1[1:], seq, qual
-
-def read_fasta(fa):
-    """yields name and seq from fasta."""
-    name, seq = None, []
-    for record in nopen(fa):
-        record = record.rstrip()
-        if record.startswith('>'):
-            if name: yield (name, ''.join(seq))
-            name, seq = record.lstrip('>'), []
-        else:
-            seq.append(record.upper())
-    if name: yield (name, ''.join(seq))
+def print_record(tags, f_id, f_seq):
+    for tcr_name, tcr_seq in tags.iteritems():
+        if f_seq.find(tcr_seq) != -1:
+            print ">%s|%s\n%s" % (f_id, tcr_name, f_seq)
 
 def main(args):
     tags = {}
@@ -47,25 +24,19 @@ def main(args):
     for fx in args.reads:
         if args.verbose:
             sys.stderr.write(">> processing %s...\n" % op.basename(fx))
-        # process either fasta or fastq. ugly.
+        # process either fasta or fastq.
         if ".fasta" in fx or ".fa" in fx:
-            for fa_id, fa_seq in read_fasta(fx):
+            for f_id, f_seq in read_fasta(fx):
                 i += 1
                 if i%1000000 == 0 and args.verbose:
                     sys.stderr.write(">> processed %d reads...\n" % i)
-                for tcr_name, tcr_seq in tags.iteritems():
-                    if fa_seq.find(tcr_seq) != -1:
-                        print ">%s|%s\n%s" % (fa_id, tcr_name, fa_seq)
-                        break
+                print_record(tags, f_id, f_seq)
         else:
-            for fq_id, fq_seq, fq_qual in read_fastq(fx):
+            for f_id, f_seq, f_qual in read_fastq(fx):
                 i += 1
                 if i%1000000 == 0 and args.verbose:
                     sys.stderr.write(">> processed %d reads...\n" % i)
-                for tcr_name, tcr_seq in tags.iteritems():
-                    if fq_seq.find(tcr_seq) != -1:
-                        print ">%s|%s\n%s" % (fq_id, tcr_name, fq_seq)
-                        break
+                print_record(tags, f_id, f_seq)
 
 if __name__ == "__main__":
     import argparse

@@ -1,27 +1,19 @@
 #! /usr/bin/env python
 # encoding: utf-8
-"""find unique sequence tags among regions (see IMGT for downloads). discards
-any region with non-unique tag."""
+"""
+Find unique sequence tags among regions (see IMGT for downloads). Discards
+any region with non-unique tag.
+"""
 import sys
+import itertools
 from toolshed import nopen
-
-def read_fasta(fa):
-    """yields name and seq from fasta."""
-    name, seq = None, []
-    for record in nopen(fa):
-        record = record.rstrip()
-        if record.startswith('>'):
-            if name: yield (name, ''.join(seq))
-            name, seq = record.lstrip('>'), []
-        else:
-            seq.append(record.upper())
-    if name: yield (name, ''.join(seq))
+from parsers import read_fasta
 
 def main(args):
     full_seqs = {}
     tags = {}
     for name, seq in read_fasta(args.fasta):
-        full_seqs[name] = seq
+        full_seqs[name] = seq.upper()
         
     # each tcr in original fasta
     for tcr, seq in full_seqs.iteritems():

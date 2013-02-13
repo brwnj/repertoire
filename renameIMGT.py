@@ -1,21 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
-
+"""
+Parses the read name down to only include the necessary gene label.
+"""
 import re
 import sys
+import itertools
 from toolshed import nopen
-
-def read_fasta(fa):
-    """yields name and seq from fasta."""
-    name, seq = None, []
-    for line in fa:
-        line = line.rstrip()
-        if line.startswith('>'):
-            if name: yield (name, ''.join(seq))
-            name, seq = line.lstrip('>'), []
-        else:
-            seq.append(line)
-    if name: yield (name, ''.join(seq))
+from parsers import read_fasta
 
 def main(args):
     for name, seq in read_fasta(nopen(args.fasta)):
