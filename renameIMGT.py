@@ -10,15 +10,16 @@ from toolshed import nopen
 from parsers import read_fasta
 
 def main(args):
-    for name, seq in read_fasta(nopen(args.fasta)):
-        try:
-            # rename from imgt
-            name = re.findall(r'(%s[^\|]+)' % args.gene.upper(), name)[0]
-            print ">%s\n%s" % (name, seq.upper())
-        except IndexError:
-            sys.stderr.write(">> unable to parse: %s\n>> for gene: %s\n" \
-                                % (name, args.gene))
-            pass
+    with nopen(args.fasta) as fasta
+        for name, seq in read_fasta(fasta):
+            try:
+                # rename from imgt
+                name = re.findall(r'(%s[^\|]+)' % args.gene.upper(), name)[0]
+                print ">%s\n%s" % (name, seq.upper())
+            except IndexError:
+                sys.stderr.write(">> unable to parse: %s\n>> for gene: %s\n" \
+                                    % (name, args.gene))
+                pass
 
 if __name__ == "__main__":
     import argparse

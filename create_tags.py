@@ -12,8 +12,9 @@ from parsers import read_fasta
 def main(args):
     full_seqs = {}
     tags = {}
-    for name, seq in read_fasta(args.fasta):
-        full_seqs[name] = seq.upper()
+    with nopen(arg.fasta) as fasta:
+        for name, seq in read_fasta(fasta):
+            full_seqs[name] = seq.upper()
         
     # each tcr in original fasta
     for tcr, seq in full_seqs.iteritems():
