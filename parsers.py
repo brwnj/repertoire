@@ -1,11 +1,9 @@
 #! /usr/bin/env python
 import itertools
-from toolshed import nopen
 
 def read_fastq(fq):
-    fh = nopen(fq)
     while True:
-        values = list(itertools.islice(fh, 4))
+        values = list(itertools.islice(fq, 4))
         if len(values) == 4:
             id1, seq, id2, qual = values
         elif len(values) == 0:
@@ -22,8 +20,7 @@ def read_fastq(fq):
         yield id1[1:-1], seq[:-1], qual[:-1]
 
 def read_fasta(fa):
-    fh = nopen(fa)
-    for header, group in itertools.groupby(fh, lambda line: line[0] == '>'):
+    for header, group in itertools.groupby(fa, lambda line: line[0] == '>'):
         if header:
             line = group.next()
             name = line[1:].strip()
