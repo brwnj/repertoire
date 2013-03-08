@@ -2,6 +2,8 @@
 
 Profiling model T-cell metagenomes with short reads
 
+http://www.ncbi.nlm.nih.gov/pubmed/19136549?dopt=Abstract
+
 ##Using iSSAKE
 
 .gz is supported throughout the pipeline
