@@ -18,8 +18,8 @@ def main(args):
     tags = {}
     if args.verbose:
         sys.stderr.write(">> reading in tag sequences...\n")
-    with nopen(args.tags) as tags:
-        for name, seq in read_fasta(tags):
+    with nopen(args.tags) as fasta:
+        for name, seq in read_fasta(fasta):
             tags[name] = seq
     i = 0
     for fx in args.reads:
