@@ -10,13 +10,13 @@ from parsers import read_fasta, write_fasta
 
 def main(args):
     # fields from issake
-    fields = "contig_id length reads_needed coverage seed_name v_region j_region".split()
+    fields = "contig_id length reads coverage seed v_region j_region".split()
     # the only fields i believe make any sense to keep
-    out = "id v_region j_region length coverage".split()
+    out = "id v_region j_region length reads coverage".split()
     with nopen(args.fasta_in) as fasta, open(args.fasta_out, 'wb') as fasta_out, \
             open(args.meta, 'wb') as meta:
         # print header
-        meta.write("#" + "\t".join(out) + "\n")
+        meta.write("\t".join(out) + "\n")
         for i, retvals in enumerate(read_fasta(fasta)):
             name, seq = retvals
             # remove some text from iSSAKE output
