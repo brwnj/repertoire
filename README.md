@@ -1,10 +1,11 @@
-#iSSAKE
+#repertoire
 
-Profiling model T-cell metagenomes with short reads
+Profiling model T-cell and B-cell metagenomes with short reads.
 
-http://www.ncbi.nlm.nih.gov/pubmed/19136549?dopt=Abstract
+##Receptor Assembly
 
-##Using iSSAKE
+My reads for this T cell analysis were from sheared fragments so I had to
+assemble using iSSAKE.
 
 .gz is supported throughout the pipeline
 
@@ -40,7 +41,7 @@ Run iSSAKE
 iSSAKE -f trimmed.fa -s seeds.fa -b sampleid
 ```
 
-##Further analysis
+##Contig Assessment
 
 Download J regions based on strand ([TRAJ][3] or [TRBJ][4]).
 
@@ -76,14 +77,6 @@ Parse read names into data table
 python reads2meta.py sampleid.fa > sampleid.metadata
 ```
 
-Align sequences into tree using [Muscle][5]
-
-```
-muscle -in sampleid.fa -out aligned.fa
-```
-
-Visualize data in [Topiary Explorer][6]
-
 ##Links
 
 Bioawk: https://github.com/lh3/bioawk
@@ -94,5 +87,3 @@ Python dependency: ``pip install toolshed``
 [2]: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=8.1+TRBV&species=Homo+sapiens&IMGTlabel=L-PART1+V-EXON
 [3]: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=7.2+TRAJ&species=Homo+sapiens
 [4]: http://www.imgt.org/IMGT_GENE-DB/GENElect?query=7.2+TRBJ&species=Homo+sapiens
-[5]: http://www.ebi.ac.uk/Tools/msa/muscle/
-[6]: https://github.com/qiime/Topiary-Explorer
