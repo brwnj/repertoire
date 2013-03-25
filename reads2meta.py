@@ -12,7 +12,7 @@ def main(args):
     # fields from issake
     fields = "contig_id length reads avg_coverage seed v_region j_region".split()
     # the only fields i believe make any sense to keep
-    out = "id v_region j_region length reads avg_coverage percent_of_total".split()
+    out = "id v_region j_region length reads avg_coverage percent_of_total sequence".split()
     # total reads used in assembly
     total = 0.
     with nopen(args.fasta_in) as fasta:
@@ -20,18 +20,19 @@ def main(args):
             name = name.replace("size","").replace("cov","").replace("read","").replace("seed:","")
             d = dict(zip(fields, name.split("|")))
             total += int(d['reads'])
-    with nopen(args.fasta_in) as fasta, open(args.fasta_out, 'wb') as fasta_out, \
+    with nopen(args.fasta_in) as fasta,\
+            open(args.fasta_out, 'wb') as fasta_out,\
             open(args.meta, 'wb') as meta:
         # print header
         meta.write("\t".join(out) + "\n")
-        for i, retvals in enumerate(read_fasta(fasta)):
-            name, seq = retvals
+        for i, (name, seq) in enumerate(read_fasta(fasta)):
             # remove some text from iSSAKE output
             name = name.replace("size","").replace("cov","").replace("read","").replace("seed:","")
             d = dict(zip(fields, name.split("|")))
             # want to shorten the read names
             d['id'] = "contig_%d" % i
-            d['percent_of_total'] = 100 * (int(d['reads']) / total)
+            d['percent_of_total'] = "%.6g" % (100 * (int(d['reads']) / total))
+            d['sequence'] = seq
             meta.write("\t".join(map(str, [d[o] for o in out])) + "\n")
             write_fasta(fasta_out, d['id'], seq.upper())
 
