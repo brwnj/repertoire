@@ -3,21 +3,22 @@ import itertools
 
 def read_fastq(fq):
     """parses fastq filehandle and returns name, sequence, and qualities."""
-    values = list(itertools.islice(fq, 4))
-    if len(values) == 4:
-        id1, seq, id2, qual = values
-    elif len(values) == 0:
-        raise StopIteration
-    else:
-        raise EOFError("unexpected end of file")
-    assert id1.startswith('@'),\
-            ">> Fastq out of sync at read:\n%s\n" % id1
-    assert id2.startswith('+'),\
-            ">> Fastq out of sync at read:\n%s\n" % id1
-    assert len(seq) == len(qual),\
-            ">> Sequence and Quality are not the same length \
-            for read:\n%s\n" % id1
-    yield id1[1:-1], seq[:-1], qual[:-1]
+    while True:
+        values = list(itertools.islice(fq, 4))
+        if len(values) == 4:
+            id1, seq, id2, qual = values
+        elif len(values) == 0:
+            raise StopIteration
+        else:
+            raise EOFError("unexpected end of file")
+        assert id1.startswith('@'),\
+                ">> Fastq out of sync at read:\n%s\n" % id1
+        assert id2.startswith('+'),\
+                ">> Fastq out of sync at read:\n%s\n" % id1
+        assert len(seq) == len(qual),\
+                ">> Sequence and Quality are not the same length \
+                for read:\n%s\n" % id1
+        yield id1[1:-1], seq[:-1], qual[:-1]
 
 def read_fasta(fa):
     """parses fasta filehandle and returns name and sequence."""
