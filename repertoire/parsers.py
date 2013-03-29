@@ -1,34 +1,37 @@
 #! /usr/bin/env python
 import itertools
 
-def read_fastq(fq):
-    """parses fastq filehandle and returns name, sequence, and qualities."""
+def read_fastx(fp):    
+    """author: @lh3. parses fasta and fastq."""
+    last = None
     while True:
-        values = list(itertools.islice(fq, 4))
-        if len(values) == 4:
-            id1, seq, id2, qual = values
-        elif len(values) == 0:
-            raise StopIteration
+        if not last:
+            for l in fp:
+                if l[0] in '>@':
+                    last = l[:-1]
+                    break
+        if not last: break
+        name, seqs, last = last[1:].split()[0], [], None
+        for l in fp:
+            if l[0] in '@+>':
+                last = l[:-1]
+                break
+            seqs.append(l[:-1])
+        if not last or last[0] != '+':
+            yield name, ''.join(seqs), None
+            if not last: break
         else:
-            raise EOFError("unexpected end of file")
-        assert id1.startswith('@'),\
-                ">> Fastq out of sync at read:\n%s\n" % id1
-        assert id2.startswith('+'),\
-                ">> Fastq out of sync at read:\n%s\n" % id1
-        assert len(seq) == len(qual),\
-                ">> Sequence and Quality are not the same length \
-                for read:\n%s\n" % id1
-        yield id1[1:-1], seq[:-1], qual[:-1]
-
-def read_fasta(fa):
-    """parses fasta filehandle and returns name and sequence."""
-    for header, group in itertools.groupby(fa, lambda line: line[0] == '>'):
-        if header:
-            line = group.next()
-            name = line[1:].strip()
-        else:
-            seq = ''.join(line.strip() for line in group)
-            yield name, seq
+            seq, leng, seqs = ''.join(seqs), 0, []
+            for l in fp:
+                seqs.append(l[:-1])
+                leng += len(l) - 1
+                if leng >= len(seq):
+                    last = None
+                    yield name, seq, ''.join(seqs);
+                    break
+            if last:
+                yield name, seq, None
+                break
 
 def write_fasta(fh, name, seq, wrap=70):
     """given filehandle, name, and sequence, writes fasta lines and wraps

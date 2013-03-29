@@ -7,14 +7,14 @@ for each file.
 import sys
 import gzip
 import os.path as op
-from parsers import read_fastq
+from parsers import read_fastx
 from toolshed import nopen
 
 def fq_to_set(fq):
     fq_l = []
     fq_d = {}
     with nopen(fq) as fh:
-        for name, seq, qual in read_fastq(fh):
+        for name, seq, qual in read_fastx(fh):
             # split name on whitespace, leaving off "1" or "2"
             read_id = name.split()[0]
             fq_l.append(read_id)
