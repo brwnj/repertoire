@@ -61,11 +61,6 @@ def main(args):
     r1_primers = fasta_to_dict(args.r1primer)
     r2_primers = fasta_to_dict(args.r2primer)
 
-    read_count = 0
-    with nopen(args.r1) as r1:
-        for name, seq, qual in r1:
-            read_count += 1
-
     with nopen(args.r1) as r1, nopen(args.r2) as r2,\
             open(args.r1out, 'wb') as r1out, open(args.r2out, 'wb') as r2out:
 
