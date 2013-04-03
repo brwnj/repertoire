@@ -57,7 +57,7 @@ def get_trim_loc(target, query):
         return len(target)
 
 def main(args):
-    # read 1 and 2 specific primers    
+    # read 1 and 2 specific primers
     r1_primers = fasta_to_dict(args.r1primer)
     r2_primers = fasta_to_dict(args.r2primer)
 
@@ -66,7 +66,7 @@ def main(args):
 
         for i, ((r1name, r1seq, r1qual), (r2name, r2seq, r2qual)) in \
                 enumerate(izip(read_fastx(r1), read_fastx(r2)), start=1):
-            if i % 1000 == 0:
+            if i % 100000 == 0:
                 print >> sys.stderr, ">> processed %d reads" % i
 
             # this should never happen after `filter_pairs.py`
@@ -91,14 +91,16 @@ def main(args):
             # read count:c-region:vh-framework
             r1name = "read_%d:%s:%s 1" % (i, r1_pname, r2_pname)
             r2name = "read_%d:%s:%s 2" % (i, r1_pname, r2_pname)
-
+            r1seq = r1seq[r1_left_trim:r1_right_trim + r1_left_trim]
+            r1qual = r1qual[r1_left_trim:r1_right_trim + r1_left_trim]
+            r2seq = r2seq[r2_left_trim:r2_right_trim + r2_left_trim]
+            r2qual = r2qual[r2_left_trim:r2_right_trim + r2_left_trim]
+            if len(r1seq) < args.minlength or len(r2seq) < args.minlength:
+                # count number discarded due to length
+                continue
             # write the records
-            r1out.write("@%s\n%s\n+\n%s\n" % \
-                    (r1name, r1seq[r1_left_trim:r1_right_trim + r1_left_trim],
-                     r1qual[r1_left_trim:r1_right_trim + r1_left_trim]))
-            r2out.write("@%s\n%s\n+\n%s\n" % \
-                    (r2name, r2seq[r2_left_trim:r2_right_trim + r2_left_trim],
-                     r2qual[r2_left_trim:r2_right_trim + r2_left_trim]))
+            r1out.write("@%s\n%s\n+\n%s\n" % (r1name, r1seq, r1qual))
+            r2out.write("@%s\n%s\n+\n%s\n" % (r2name, r2seq, r2qual))
             
 if __name__ == '__main__':
     import argparse
@@ -110,9 +112,11 @@ if __name__ == '__main__':
     p.add_argument("r2primer", help="expected R2 primer fasta")
     p.add_argument("r1out", help="read 1 output fastq")
     p.add_argument("r2out", help="read 2 output fastq")
-    p.add_argument("--mismatches", dest="mismatches", type=int,
-            default=6, help="number of mismatches to allow while matching \
-            primers of the 5' end [ %(default)s ]")
+    p.add_argument("--mismatches", type=int, default=6, help="number of \
+            mismatches to allow while matching primers of the 5' end \
+            [ %(default)s ]")
+    p.add_argument("--minlength", type=int, default=10, help="minimum \
+            acceptable sequence length after trimming [ %(default)s ]")
     # lao = p.add_argument_group("local alignment options")
     # lao.add_argument("--match", type=int, default=1, help="match score [ %(default)s ]")
     # lao.add_argument("--mismatch", type=int, default=-1, help="mismatch penalty [ %(default)s ]")
