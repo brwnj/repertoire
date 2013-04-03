@@ -115,7 +115,7 @@ if __name__ == '__main__':
     p.add_argument("--mismatches", type=int, default=6, help="number of \
             mismatches to allow while matching primers of the 5' end \
             [ %(default)s ]")
-    p.add_argument("--minlength", type=int, default=10, help="minimum \
+    p.add_argument("--minlength", type=int, default=30, help="minimum \
             acceptable sequence length after trimming [ %(default)s ]")
     # lao = p.add_argument_group("local alignment options")
     # lao.add_argument("--match", type=int, default=1, help="match score [ %(default)s ]")
