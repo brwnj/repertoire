@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-matches = pairwise2.align.localms(target, query, 1, -1, -3, -2)
-try:
-    # highest scoring match first
-    return int(matches[0][3])
-except IndexError:
+Find unique reads by primer among all joined reads.
 """
 import sys
 from toolshed import nopen
@@ -42,7 +38,10 @@ def main(args):
             if q_cregion != t_cregion and q_fwork != t_fwork: continue
             # locally align using smith-waterman
             matches = pairwise2.align.localms(target['seq'], query['seq'], 1, -1, -1, -1)
-            high_score = matches[0][2]
+            try:
+                high_score = matches[0][2]
+            except IndexError:
+                continue
             if high_score == expected_score:
                 subseq = True
                 break
