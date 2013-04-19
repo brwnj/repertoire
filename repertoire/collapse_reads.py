@@ -31,12 +31,14 @@ def main(args):
     fd = OrderedDict(sorted(fd.items(), key=lambda (k, v): len(v['seq']), reverse=True))
     seen = set()
     ignore = set()
-    for i, (t_name, target) in enumerate(fd.iteritems(), start=1):
-        # skip reads that have already been determined as subsequences
-        if t_name in ignore: continue
-        seen.add(t_name)
+    i = 1
+    for t_name, target in fd.iteritems():
         if i % 10 == 0:
             print >> sys.stderr, ">> processed %d reads..." % i
+        seen.add(t_name)
+        i += 1
+        # skip reads that have already been determined as subsequences
+        if t_name in ignore: continue
         t_id, t_cregion, t_fwork = t_name.split(":")
         for q_name, query in fd.iteritems():
             # seen - tested in first loop
@@ -49,6 +51,7 @@ def main(args):
             if distance(target['seq'], query['seq']) < args.mismatches:
                 # mark subsequences to be ignored
                 ignore.add(q_name)
+                i += 1
         print "@%s\n%s\n+\n%s" % (t_name, target['seq'], target['qual'])
 
 if __name__ == '__main__':
@@ -56,6 +59,6 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('fastq', help="reads to collapse to unique")
-    p.add_argument('-m', '--mismatches', type=int, default=0,
+    p.add_argument('-m', '--mismatches', type=int, default=1,
             help="mismatches to allow during mapping [%(default)s]")
     main(p.parse_args())
