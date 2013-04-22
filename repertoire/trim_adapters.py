@@ -51,7 +51,7 @@ def get_trim_loc(target, query):
     matches = pairwise2.align.localms(target, query, 1, -1, -3, -2)
     try:
         # highest scoring match first
-        return int(matches[0][2])
+        return int(matches[0][3])
     except IndexError:
         # no match
         return len(target)
