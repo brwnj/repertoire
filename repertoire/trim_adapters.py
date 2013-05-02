@@ -5,6 +5,7 @@ Trim primer adapters from forward and reverse reads and update read name with
 identifier.
 """
 import sys
+import string
 import numpy as np
 import editdist as ed
 from toolshed import nopen
@@ -12,13 +13,11 @@ from itertools import izip
 from parsers import read_fastx
 from Bio import pairwise2
 
-BASE_COMPLEMENT = {'A':'T', 'C':'G', 'G':'C', 'T':'A', 'N':'N', 'S':'S',
-                    'R':'R', 'Y':'Y', 'M':'M', 'K':'K', 'W':'W', 'N':'N',
-                    'H':'H', 'B':'B', 'V':'V', 'D':'D'}
+COMPLEMENT = string.maketrans('ACGTNSRYMKWHBVD','TGCANSRYMKWHBVD')
 
 def rev_comp(seq):
     """return reverse complement of seq."""
-    return ''.join([BASE_COMPLEMENT[b] for b in seq[::-1]])
+    return seq.translate(COMPLEMENT)[::-1]
 
 def fasta_to_dict(fasta):
     """intention is to save the primer sequences."""
