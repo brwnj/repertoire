@@ -18,12 +18,18 @@ def fastq_to_dict(fastq):
     return d
 
 def distance(a, b):
-    """Calculate Levenshtein distance accounting for length differences between
-    the two strings. Returns int.
-    >>> distance('CATGGGTGGTTCAGTGGTAGAATTCTCGCCTGCC', 'GTGCTGTAGGCATT')
-    2
+    """find best edit distance between two strings of potentially uneven length.
     """
-    return ed.distance(a, b) - abs(len(a) - len(b))
+    la, lb = len(a), len(b)
+    if la < lb:
+        return distance(b, a)
+    if la == lb:
+        return editdist.distance(a, b)
+    else:
+        dists = []
+        for i in xrange(0, la-lb+1):
+            dists.append(editdist.distance(a[i:i+lb], b))
+        return min(dists)
 
 def main(args):
     fd = fastq_to_dict(args.fastq)
@@ -41,15 +47,11 @@ def main(args):
         if t_name in ignore: continue
         t_id, t_cregion, t_fwork = t_name.split(":")
         for q_name, query in fd.iteritems():
-            # seen - tested in first loop
-            # ignore - already found to be subsequence of a target
             if q_name in seen or q_name in ignore: continue
             q_id, q_cregion, q_fwork = q_name.split(":")
             # only attempt to collapse things of the same c-region and framework
             if t_cregion != q_cregion and t_fwork != q_fwork: continue
-            # compare the sequences
             if distance(target['seq'], query['seq']) < args.mismatches:
-                # mark subsequences to be ignored
                 ignore.add(q_name)
                 i += 1
         print "@%s\n%s\n+\n%s" % (t_name, target['seq'], target['qual'])
@@ -61,4 +63,5 @@ if __name__ == '__main__':
     p.add_argument('fastq', help="reads to collapse to unique")
     p.add_argument('-m', '--mismatches', type=int, default=1,
             help="mismatches to allow during mapping [%(default)s]")
-    main(p.parse_args())
+    args = p.parse_args()
+    main(args)
