@@ -78,4 +78,5 @@ if __name__ == '__main__':
             help="comma delimited list of sample names defining the metadata files")
     p.add_argument("meta_files", nargs="+",
             help="metadata of the samples to compare")
-    main(p.parse_args())
+    args = p.parse_args()
+    main(args)

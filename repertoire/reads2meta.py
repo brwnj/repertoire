@@ -2,6 +2,7 @@
 # encoding: utf-8
 """
 From read names, create metadata table.
+T-cell.
 """
 import sys
 import itertools

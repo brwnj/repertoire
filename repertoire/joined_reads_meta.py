@@ -23,4 +23,5 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('fastq', nargs="+", help="SeqPrep joined reads.")
-    main(p.parse_args())
+    args = p.parse_args()
+    main(args)
