@@ -39,4 +39,4 @@ def write_fasta(fh, name, seq, wrap=70):
     """
     fh.write(">%s\n" % name)
     # wrap the sequence lines at length `wrap`
-    fh.write("\n".join([seq[i:i + wrap] for i in range(0, len(seq), wrap)]) + "\n")
+    fh.write("\n".join([seq[i:i+wrap] for i in range(0,len(seq),wrap)])+"\n")
