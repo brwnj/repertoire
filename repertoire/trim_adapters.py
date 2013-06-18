@@ -5,15 +5,60 @@ Trim primer adapters from forward and reverse reads and update read name with
 identifier.
 """
 import sys
+import gzip
 import string
-import numpy as np
 import editdist as ed
 from toolshed import nopen
-from itertools import izip
-from parsers import read_fastx
-from Bio import pairwise2
+from itertools import izip, groupby, islice
 
 COMPLEMENT = string.maketrans('ACGTNSRYMKWHBVD','TGCANSRYMKWHBVD')
+
+def readfq(fq):
+    class Fastq(object):
+        def __init__(self, args):
+            self.name = args[0][1:]
+            self.seq = args[1]
+            self.qual = args[3]
+            assert len(self.seq) == len(self.qual)
+    
+        def __repr__(self):
+            return "Fastq({name})".format(name=self.name)
+    
+        def __str__(self):
+            return "@{name}\n{seq}\n+\n{qual}".format(name=self.name,
+                    seq=self.seq, qual=self.qual)
+    
+    with nopen(fq) as fh:
+        fqclean = (x.strip("\r\n") for x in fh if x.strip())
+        while True:
+            rd = [x for x in islice(fqclean, 4)]
+            if not rd: raise StopIteration
+            assert all(rd) and len(rd) == 4
+            yield Fastq(rd)
+
+def readfa(fa):
+    class Fasta(object):
+        def __init__(self, name, seq):
+            self.name = name
+            self.seq = seq
+    
+        def __repr__(self):
+            return "Fasta({name})".format(name=self.name)
+    
+        def __str__(self):
+            return ">{name}\n{seq}".format(
+                        name=self.name,
+                        seq="\n".join([self.seq[i:i + 70] for i in \
+                                range(0, len(self.seq), 70)]))
+    
+    with nopen(fa) as fh:
+        for header, group in groupby(fh, lambda line: line[0] == '>'):
+            if header:
+                line = group.next()
+                name = line[1:].strip()
+            else:
+                seq = ''.join(line.strip() for line in group)
+                yield Fasta(name, seq)
 
 def rev_comp(seq):
     """return reverse complement of seq."""
@@ -22,102 +67,88 @@ def rev_comp(seq):
 def fasta_to_dict(fasta):
     """intention is to save the primer sequences."""
     d = {}
-    with nopen(fasta) as fa:
-        for name, seq, qual in read_fastx(fa):
-            d[name] = seq
+    for rd in readfa(fasta):
+        d[rd.name] = rd.seq
     return d
 
-def get_primer(query, primers, mismatches):
+def get_primer(query, primers, n):
     """return the primer name and the length to trim."""
-    match_name = ""
-    distance = 99
+    primer = ""
+    distance = n + 1
     for name, target in primers.iteritems():
         d = ed.distance(query[:len(target)], target)
         if d < distance:
             distance = d
-            match_name = name
-    # return False if distance to length ratio is terrible
-    if distance < mismatches:
-        return match_name, len(primers[match_name])
+            primer = name
+    if distance < n:
+        return primer, len(primers[primer])
     else:
         return False, False
 
-def get_trim_loc(target, query):
-    """docstring for get_trim
-    return the trim location if possible or the sequence length
-    match=1, mismatch=-1, gapopen=-5, gapextend=-3
-    """
-    matches = pairwise2.align.localms(target, query, 1, -1, -3, -2)
-    try:
-        # highest scoring match first
-        return int(matches[0][3])
-    except IndexError:
-        # no match
-        return len(target)
+def trim_loc(a, b):
+    """find best edit distance and return its index else return length of a"""
+    la, lb = len(a), len(b)
+    dists = []
+    for i in xrange(0, la-lb+1):
+        dists.append(ed.distance(a[i:i+lb], b))
+    best = min(dists)
+    # 20% mismatch okay for now
+    return dists.index(best) if best < .2*lb else la
+
+def get_name(name, insert):
+    if ".fastq" in name:
+        sample = name.split(".fastq")[0]
+    else:
+        sample = name.split(".fq")[0]
+    return "{sample}.{insert}.fastq.gz".format(**locals())
 
 def main(args):
-    # read 1 and 2 specific primers
+    mmatch = args.mismatches
+    minleng = args.minlength
     r1_primers = fasta_to_dict(args.r1primer)
     r2_primers = fasta_to_dict(args.r2primer)
+    r1_out = gzip.open(get_name(args.r1, "rmadptr"), 'wb')
+    r2_out = gzip.open(get_name(args.r2, "rmadptr"), 'wb')
+    for i, (r1, r2) in enumerate(izip(readfq(args.r1), readfq(args.r2)), start=1):
+        if i % 100000 == 0: print >>sys.stderr, ">> processed %d reads" % i
+        assert r1.name.split()[0] == r2.name.split()[0]
 
-    with nopen(args.r1) as r1, nopen(args.r2) as r2,\
-            open(args.r1out, 'wb') as r1out, open(args.r2out, 'wb') as r2out:
+        # determine primer being used, trim location
+        p1, r1_left_trim = get_primer(r1.seq, r1_primers, mmatch)
+        p2, r2_left_trim = get_primer(r2.seq, r2_primers, mmatch)
+        if not p1 or not p2: continue
 
-        for i, ((r1name, r1seq, r1qual), (r2name, r2seq, r2qual)) in \
-                enumerate(izip(read_fastx(r1), read_fastx(r2)), start=1):
-            if i % 100000 == 0:
-                print >> sys.stderr, ">> processed %d reads" % i
+        # find start of RC of primer in opposing sequence
+        r1_right_trim = trim_loc(r1.seq[r1_left_trim:], rev_comp(r2_primers[p2]))
+        r2_right_trim = trim_loc(r2.seq[r2_left_trim:], rev_comp(r1_primers[p1]))
+        
+        r1.name = "{id}:{cregion}:{fwork} 1".format(id=r1.name.split()[0], cregion=p1, fwork=p2)
+        r2.name = "{id}:{cregion}:{fwork} 2".format(id=r2.name.split()[0], cregion=p1, fwork=p2)
+        
+        # do the trimming of seq and qual
+        r1_full_trim = r1_right_trim + r1_left_trim
+        r1.seq = r1.seq[r1_left_trim:r1_full_trim]
+        r1.qual = r1.qual[r1_left_trim:r1_full_trim]
+        r2_full_trim = r2_right_trim + r2_left_trim
+        r2.seq = r2.seq[r2_left_trim:r2_full_trim]
+        r2.qual = r2.qual[r2_left_trim:r2_full_trim]
+        if len(r1.seq) < minleng or len(r2.seq) < minleng: continue
 
-            # this should never happen after `filter_pairs.py`
-            if r1name.split()[0] != r2name.split()[0]:
-                print >> sys.stderr, ">> r1 and r2 are out of sync."
-                sys.exit(1)
+        # write the records
+        r1_out.write(r1.__str__() + "\n")
+        r2_out.write(r2.__str__() + "\n")
 
-            # determine primer being used
-            r1_pname, r1_left_trim = get_primer(r1seq, r1_primers, args.mismatches)
-            r2_pname, r2_left_trim = get_primer(r2seq, r2_primers, args.mismatches)
-
-            # unable to determine primer; skip this read
-            if not r1_pname or not r2_pname:
-                # maybe dump into badprimer.fastq
-                # print >> sys.stderr, ">> undetermined primer for %s" % r1name
-                continue
-
-            # find start of RC of primer in opposing sequence
-            r1_right_trim = get_trim_loc(r1seq[r1_left_trim:], rev_comp(r2_primers[r2_pname]))
-            r2_right_trim = get_trim_loc(r2seq[r2_left_trim:], rev_comp(r1_primers[r1_pname]))
-            
-            # read count:c-region:vh-framework
-            r1name = "read_%d:%s:%s 1" % (i, r1_pname, r2_pname)
-            r2name = "read_%d:%s:%s 2" % (i, r1_pname, r2_pname)
-            r1seq = r1seq[r1_left_trim:r1_right_trim + r1_left_trim]
-            r1qual = r1qual[r1_left_trim:r1_right_trim + r1_left_trim]
-            r2seq = r2seq[r2_left_trim:r2_right_trim + r2_left_trim]
-            r2qual = r2qual[r2_left_trim:r2_right_trim + r2_left_trim]
-            if len(r1seq) < args.minlength or len(r2seq) < args.minlength:
-                # count number discarded due to length
-                continue
-            # write the records
-            r1out.write("@%s\n%s\n+\n%s\n" % (r1name, r1seq, r1qual))
-            r2out.write("@%s\n%s\n+\n%s\n" % (r2name, r2seq, r2qual))
-            
 if __name__ == '__main__':
     import argparse
     p = argparse.ArgumentParser(description=__doc__,
-            formatter_class=argparse.RawDescriptionHelpFormatter)
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("r1", help="read 1 fastq")
     p.add_argument("r2", help="read 2 fastq")
     p.add_argument("r1primer", help="expected R1 primer fasta")
     p.add_argument("r2primer", help="expected R2 primer fasta")
-    p.add_argument("r1out", help="read 1 output fastq")
-    p.add_argument("r2out", help="read 2 output fastq")
-    p.add_argument("--mismatches", type=int, default=6, help="number of \
-            mismatches to allow while matching primers [%(default)s]")
+    p.add_argument("--mismatches", type=int, default=3, help="number of \
+            mismatches to allow while matching primers")
     p.add_argument("--minlength", type=int, default=30, help="minimum \
-            acceptable sequence length after trimming [%(default)s]")
-    # lao = p.add_argument_group("local alignment options")
-    # lao.add_argument("--match", type=int, default=1, help="match score [ %(default)s ]")
-    # lao.add_argument("--mismatch", type=int, default=-1, help="mismatch penalty [ %(default)s ]")
-    # lao.add_argument("--gapopen", type=int, default=-5, help="gap open penalty [ %(default)s ]")
-    # lao.add_argument("--gapextent", type=int, default=-3, help="gap extend penalty [ %(default)s ]")
-    main(p.parse_args())
+            acceptable sequence length after trimming")
+    args = p.parse_args()
+    main(args)
