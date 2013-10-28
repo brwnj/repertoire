@@ -96,19 +96,16 @@ def trim_loc(a, b):
     return dists.index(best) if best < .2*lb else la
 
 def get_name(name, insert):
-    if ".fastq" in name:
-        sample = name.split(".fastq")[0]
-    else:
-        sample = name.split(".fq")[0]
-    return "{sample}.{insert}.fastq.gz".format(**locals())
+    sample = name.split(".")[0]
+    return "{sample}.{insert}.fastq.gz".format(sample=sample, insert=insert)
 
 def main(args):
     mmatch = args.mismatches
     minleng = args.minlength
     r1_primers = fasta_to_dict(args.r1primer)
     r2_primers = fasta_to_dict(args.r2primer)
-    r1_out = gzip.open(get_name(args.r1, "rmadptr"), 'wb')
-    r2_out = gzip.open(get_name(args.r2, "rmadptr"), 'wb')
+    r1_out = gzip.open(get_name(args.r1, "trimmed"), 'wb')
+    r2_out = gzip.open(get_name(args.r2, "trimmed"), 'wb')
     for i, (r1, r2) in enumerate(izip(readfq(args.r1), readfq(args.r2)), start=1):
         if i % 100000 == 0: print >>sys.stderr, ">> processed %d reads" % i
         assert r1.name.split()[0] == r2.name.split()[0]
